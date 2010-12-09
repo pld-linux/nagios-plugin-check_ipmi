@@ -2,7 +2,7 @@
 Summary:	Nagios plugin to check IPMI status
 Name:		nagios-plugin-%{plugin}
 Version:	1.3
-Release:	1
+Release:	2
 License:	GPL v2
 Group:		Networking
 Source0:	%{plugin}
@@ -18,6 +18,7 @@ BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 %define		_sysconfdir	/etc/nagios/plugins
 %define		plugindir	%{_prefix}/lib/nagios/plugins
 %define		cachedir	/var/spool/nagios
+%define		cachefile	%{cachedir}/%{plugin}.sdr
 
 %description
 Nagios plugin to check IPMI status.
@@ -36,7 +37,7 @@ rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_sysconfdir},%{plugindir},%{cachedir}}
 install -p %{plugin} $RPM_BUILD_ROOT%{plugindir}/%{plugin}
 sed -e 's,@plugindir@,%{plugindir},' %{SOURCE1} > $RPM_BUILD_ROOT%{_sysconfdir}/%{plugin}.cfg
-touch $RPM_BUILD_ROOT%{cachedir}/%{plugin}.sdr
+touch $RPM_BUILD_ROOT%{cachefile}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -44,7 +45,7 @@ rm -rf $RPM_BUILD_ROOT
 %post
 if [ "$1" = 1 ]; then
 	# setup sudo rules on first install
-	%{plugindir}/%{plugin} -S || :
+	%{plugindir}/%{plugin} -S %{cachefile} || :
 fi
 
 %postun
@@ -63,4 +64,4 @@ fi
 %defattr(644,root,root,755)
 %attr(640,root,nagios) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/%{plugin}.cfg
 %attr(755,root,root) %{plugindir}/%{plugin}
-%ghost %{cachedir}/%{plugin}.sdr
+%ghost %{cachefile}
