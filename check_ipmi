@@ -34,9 +34,10 @@ PROGPATH=${0%/*}
 ARGS="$*"
 . $PROGPATH/utils.sh
 
-# this needs to be full path for sudo
+# ipmitool needs to be with full path for sudo
 ipmitool=/usr/bin/ipmitool
 sudo=/usr/bin/sudo
+modprobe=/sbin/modprobe
 
 die() {
 	eval local rc=\$STATE_$1
@@ -49,9 +50,12 @@ usage() {
 	cat >&2 <<EOF
 Usage: check_ipmi <filename>
        check_ipmi -S <filename>
+       check_ipmi -c
 
      <filename> indicates the cache file for speeding up sensor readings.
 
+    -c
+       Checks if ipmitool can be used on this system
     -S
        Install sudo rules
 EOF
@@ -62,7 +66,31 @@ trim() {
 	echo "$*" | sed -e 's/^ *\| *$//g'
 }
 
+# checks if ipmitool is even usable on this system
+check_ipmitool() {
+	echo "Checking for IPMI..."
+	$ipmitool chassis status >/dev/null 2>&1
+	if [ $? != 0 ]; then
+		echo "Chassis status failed, modprobing"
+		$modprobe ipmi_si
+		if [ $? != 0 ]; then
+			echo "ERROR: ipmi_si module did not load, probably IPMI not present"
+			echo "You can setup options to ipmi_so via modprobe.conf"
+			exit 1
+		fi
+		$modprobe ipmi_devintf
+		if [ $? != 0 ]; then
+			echo "ERROR: ipmi_devintf module did not load"
+			exit 1
+		fi
+		echo $?
+	fi
+	echo "Seems OK"
+}
+
 setup_sudoers() {
+	check_ipmitool
+
 	new=/etc/sudoers.$$.new
 	umask 0227
 	cat /etc/sudoers > $new
@@ -105,6 +133,9 @@ while [ $# -gt 0 ]; do
 		echo $PROGRAM $REVISION
 		exit 0
 		;;
+	-c)
+		check_ipmitool=1
+		;;
 	-S)
 		setup_sudo=1
 		;;
@@ -117,6 +148,11 @@ done
 
 if [ "$setup_sudo" = 1 ]; then
 	setup_sudoers
+fi
+
+if [ "$check_ipmitool" = 1 ]; then
+	check_ipmitool
+	exit 0
 fi
 
 if [ -z "$cache_filename" ]; then
