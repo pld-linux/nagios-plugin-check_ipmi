@@ -83,9 +83,31 @@ check_ipmitool() {
 			echo "ERROR: ipmi_devintf module did not load"
 			exit 1
 		fi
-		echo $?
+	else
+		echo "Seems OK"
+		return
 	fi
-	echo "Seems OK"
+
+	# check again, maybe static dev needs device updating
+	$ipmitool chassis status >/dev/null 2>&1
+	if [ $? != 0 ]; then
+		echo "Still fails, checking ipmi /dev node"
+		major=$(awk '$2 == "ipmidev" {print $1}' /proc/devices)
+		if [ -z "$major" ]; then
+			echo "ERROR: ipmidev module not present or /proc not mounted"
+			exit 1
+		fi
+		dev=/dev/ipmi0
+		rm -f $dev
+		mknod $dev c $major 0
+	fi
+
+	$ipmitool chassis status >/dev/null 2>&1
+	if [ $? != 0 ]; then
+		echo "ERROR: Can't get it to work, I give up"
+		exit 1
+	fi
+	echo "Seems now it's OK"
 }
 
 setup_sudoers() {
