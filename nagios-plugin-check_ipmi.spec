@@ -1,13 +1,14 @@
 %define		plugin	check_ipmi
 Summary:	Nagios plugin to check IPMI status
 Name:		nagios-plugin-%{plugin}
-Version:	0.1
-Release:	0.2
+Version:	1.3
+Release:	1
 License:	GPL v2
 Group:		Networking
 Source0:	%{plugin}
 Source1:	%{plugin}.cfg
 BuildRequires:	rpmbuild(macros) >= 1.552
+Requires:	ipmitool
 Requires:	nagios-common >= 3.2.3-3
 Requires:	nagios-plugins-libs
 Requires:	sudo
@@ -24,6 +25,11 @@ Nagios plugin to check IPMI status.
 %prep
 %setup -qcT
 cp -p %{SOURCE0} %{plugin}
+
+ver=$(awk '/REVISION=/{print $3}' %{plugin})
+if [ "$ver" != %{version} ]; then
+	exit 1
+fi
 
 %install
 rm -rf $RPM_BUILD_ROOT
