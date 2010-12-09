@@ -102,7 +102,7 @@ while [ $# -gt 0 ]; do
 		exit 0
 		;;
 	-V|--version)
-		echo $PROGRAM $VERSION
+		echo $PROGRAM $REVISION
 		exit 0
 		;;
 	-S)
@@ -115,12 +115,12 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-if [ -z "$cache_filename" ]; then
-	die UNKNOWN "No databasename given."
-fi
-
 if [ "$setup_sudo" = 1 ]; then
 	setup_sudoers
+fi
+
+if [ -z "$cache_filename" ]; then
+	die UNKNOWN "No databasename given."
 fi
 
 if [ ! -s "$cache_filename" ]; then
