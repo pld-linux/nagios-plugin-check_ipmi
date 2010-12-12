@@ -75,7 +75,7 @@ check_ipmitool() {
 		$modprobe ipmi_si
 		if [ $? != 0 ]; then
 			echo "ERROR: ipmi_si module did not load, probably IPMI not present"
-			echo "You can setup options to ipmi_so via modprobe.conf"
+			echo "You can setup options to ipmi_si via modprobe.conf"
 			exit 1
 		fi
 		$modprobe ipmi_devintf
