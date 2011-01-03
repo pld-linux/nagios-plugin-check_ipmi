@@ -224,4 +224,9 @@ if [ "$bad_sensors" ]; then
 	die CRITICAL "$bsensors sensors bad: $bad_sensors"
 fi
 
+if [ "$osensors " -le 0 ]; then
+	# 0 sensors found OK is likely error
+	die UNKNOWN "No sensors found OK"
+fi
+
 die OK "$osensors sensors OK"
