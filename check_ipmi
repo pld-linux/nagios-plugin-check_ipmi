@@ -194,6 +194,14 @@ $sudo $ipmitool -S $cache_filename sdr > $t || die CRITICAL "Can't run ipmitool 
 # VRD 1 Temp       | 34 degrees C      | ok
 # CMOS Battery     | 3.12 Volts        | ok
 # VCORE            | 0x01              | ok
+# Power Supply 1   | 40 Watts          | nc
+# Power Supply 2   | 40 Watts          | nc
+# Power Supplies   | 0 unspecified     | nc
+# Fan 1            | 13.72 unspecifi   | nc
+# Fan 2            | 13.72 unspecifi   | nc
+# Fan 3            | 29.40 unspecifi   | nc
+# Fan 4            | 29.40 unspecifi   | nc
+# Fans             | 0 unspecified     | nc
 
 osensors=0
 bsensors=0
@@ -201,8 +209,9 @@ bad_sensors=''
 oIFS=$IFS IFS='|'
 while read label result status; do
 	case $(trim "$status") in
-	ns)
-		# skip ns (not supported)
+	ns|nc)
+		# skip ns = Disabled
+		# skip nc = Non Critical
 		continue
 		;;
 	ok)
