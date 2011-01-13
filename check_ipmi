@@ -49,7 +49,8 @@ die() {
 usage() {
 	cat >&2 <<EOF
 Usage: check_ipmi <filename>
-       check_ipmi -S <filename>
+       check_ipmi -i 'FAN.*' <filename>
+       check_ipmi -S
        check_ipmi -c
 
      <filename> indicates the cache file for speeding up sensor readings.
@@ -58,6 +59,8 @@ Usage: check_ipmi <filename>
        Checks if ipmitool can be used on this system
     -S
        Install sudo rules
+    -i
+       grep extended regexp which sensors to ignore
 EOF
 }
 

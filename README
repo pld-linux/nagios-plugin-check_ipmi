@@ -1,0 +1,56 @@
+check_ipmi
+
+Nagios plugin for locally checking hardware status (fans, voltage) via ipmi.
+It utilizes ipmitool to get results from kernel.
+
+Usage: check_ipmi <filename>
+       check_ipmi -i REGEXP <filename>
+       check_ipmi -S
+       check_ipmi -c
+
+<filename> points to a file which is used as a cache for speeding up the check.
+on first run the sdr cache is saved and UNKNOWN state is returned, not to lock
+up Nagios process.
+
+Option -c checks if ipmitool can be used on this system, tries to load kernel
+modules, make device nodes if missing.
+
+Option -S installs sudo rules so you could invoke the check from Nagios Nrpe.
+
+Option -i allows you to skip sensors which are not interesting to you, or who
+report bad status and you can't change tresholds.
+
+For example:
+# ipmitool  sdr get "Fan Block 3"
+Sensor ID              : Fan Block 3 (0xb)
+ Entity ID             : 3.2 (Processor)
+ Sensor Type (Analog)  : Fan
+ Sensor Reading        : 34.888 (+/- 0) unspecified
+ Status                : Lower Non-Critical
+ Positive Hysteresis   : Unspecified
+ Negative Hysteresis   : Unspecified
+ Minimum sensor range  : Unspecified
+ Maximum sensor range  : Unspecified
+ Event Message Control : Entire Sensor Only
+ Readable Thresholds   : No Thresholds
+ Settable Thresholds   : No Thresholds
+
+# ipmitool sensor thresh 'Fan Block 3' lower 1 20 30
+Locating sensor record 'Fan Block 3'...
+Setting sensor "Fan Block 3" Lower Non-Recoverable threshold to 1.000
+Error setting threshold: Invalid command
+Setting sensor "Fan Block 3" Lower Critical threshold to 20.000
+Error setting threshold: Invalid command
+Setting sensor "Fan Block 3" Lower Non-Critical threshold to 30.000
+Error setting threshold: Invalid command
+
+You would invoke check_ipmi as to exclude "Fan Block 1", "Fan Block 2", "Fan Block 3":
+check_ipmi check_ipmi.sdr -i 'Fan Block [123]'
+
+License: GPL v2
+Copyright (c) 2010, 2011 Elan Ruusamäe <glen@delfi.ee>
+
+Ported to POSIX shell by Elan Ruusamäe
+Original PHP version:
+http://git.op5.org/git/?p=nagios/op5plugins.git;a=blob_plain;f=check_ipmi.php;hb=HEAD
+Author: Hugo Hallqvist <dev@op5.com>

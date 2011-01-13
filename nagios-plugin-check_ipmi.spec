@@ -7,11 +7,13 @@ License:	GPL v2
 Group:		Networking
 Source0:	%{plugin}
 Source1:	%{plugin}.cfg
+Source2:	README
 BuildRequires:	rpmbuild(macros) >= 1.552
 Requires:	grep
 Requires:	ipmitool
 Requires:	nagios-common >= 3.2.3-3
 Requires:	nagios-plugins-libs
+Requires:	sed
 Requires:	sudo
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -27,6 +29,7 @@ Nagios plugin to check IPMI status.
 %prep
 %setup -qcT
 cp -p %{SOURCE0} %{plugin}
+cp -p %{SOURCE2} .
 
 ver=$(awk '/REVISION=/{print $3}' %{plugin})
 if [ "$ver" != %{version} ]; then
@@ -63,6 +66,7 @@ fi
 
 %files
 %defattr(644,root,root,755)
+%doc README
 %attr(640,root,nagios) %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/%{plugin}.cfg
 %attr(755,root,root) %{plugindir}/%{plugin}
 %ghost %{cachefile}
