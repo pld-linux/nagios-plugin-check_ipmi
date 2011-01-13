@@ -158,6 +158,10 @@ while [ $# -gt 0 ]; do
 	-c)
 		check_ipmitool=1
 		;;
+	-i)
+		shift
+		ignore_sensors="$1"
+		;;
 	-S)
 		setup_sudo=1
 		;;
@@ -203,39 +207,59 @@ $sudo $ipmitool -S $cache_filename sdr > $t || die CRITICAL "Can't run ipmitool 
 # Fan 4            | 29.40 unspecifi   | nc
 # Fans             | 0 unspecified     | nc
 
-osensors=0
-bsensors=0
-bad_sensors=''
+ok_sensors=0
+warn_sensors=0
+crit_sensors=0
+critical=''
+warning=''
 oIFS=$IFS IFS='|'
 while read label result status; do
+	# check for ignored sensors
+	if trim "$label" | grep -qE "^($ignore_sensors)$"; then
+		echo "ignore $label"
+		continue
+	fi
+
 	case $(trim "$status") in
-	ns|nc)
+	ns)
 		# skip ns = Disabled
-		# skip nc = Non Critical
 		continue
 		;;
-	ok)
-		# just count them
-		osensors=$((osensors+1))
-		;;
-	*)
-		bsensors=$((bsensors+1))
+	nc)
+		# Non Critical -> warning
+		warn_sensors=$((warn_sensors+1))
 		label=$(trim "$label")
 		result=$(trim "$result")
 		status=$(trim "$status")
-		bad_sensors="$bad_sensors($label, $status, $result) ";
+		warning="$warning($label, $status, $result) "
+		;;
+	ok)
+		# count ok
+		ok_sensors=$((ok_sensors+1))
+		;;
+	*)
+		crit_sensors=$((crit_sensors+1))
+		label=$(trim "$label")
+		result=$(trim "$result")
+		status=$(trim "$status")
+		critical="$critical($label, $status, $result) "
 		;;
 	esac
 done < $t
 rm -f $t
 
-if [ "$bad_sensors" ]; then
-	die CRITICAL "$bsensors sensors bad: $bad_sensors"
+msg="${critical:+$crit_sensors sensors critical: $critical}"
+msg="${warning:+$warn_sensors sensors warning: $warning}"
+if [ $crit_sensors -gt 0 ]; then
+	die CRITICAL "$msg"
+fi
+if [ $warn_sensors -gt 0 ]; then
+	die WARNING "$msg"
 fi
 
-if [ "$osensors " -le 0 ]; then
+if [ "$ok_sensors " -le 0 ]; then
 	# 0 sensors found OK is likely error
 	die UNKNOWN "No sensors found OK"
 fi
 
-die OK "$osensors sensors OK"
+die OK "$ok_sensors sensors OK"
