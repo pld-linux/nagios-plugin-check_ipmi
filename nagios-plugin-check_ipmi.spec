@@ -8,6 +8,7 @@ Group:		Networking
 Source0:	%{plugin}
 Source1:	%{plugin}.cfg
 BuildRequires:	rpmbuild(macros) >= 1.552
+Requires:	grep
 Requires:	ipmitool
 Requires:	nagios-common >= 3.2.3-3
 Requires:	nagios-plugins-libs
