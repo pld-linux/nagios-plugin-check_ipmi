@@ -244,7 +244,6 @@ while read label result status; do
 	status=$(trim "$status")
 
 	if ignored_status "$status"; then
-		echo "ignore status $status on $label"
 		continue
 	fi
 
