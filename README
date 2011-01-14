@@ -5,6 +5,7 @@ It utilizes ipmitool to get results from kernel.
 
 Usage: check_ipmi <filename>
        check_ipmi -i REGEXP <filename>
+       check_ipmi -I STATUS1,STATUS2 <filename>
        check_ipmi -S
        check_ipmi -c
 
@@ -16,6 +17,8 @@ Option -c checks if ipmitool can be used on this system, tries to load kernel
 modules, make device nodes if missing.
 
 Option -S installs sudo rules so you could invoke the check from Nagios Nrpe.
+
+Option -I allows you to ignore certain statuses, line "nc" (Non-Critical) being reported as critical.
 
 Option -i allows you to skip sensors which are not interesting to you, or who
 report bad status and you can't change tresholds.

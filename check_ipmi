@@ -50,6 +50,7 @@ usage() {
 	cat >&2 <<EOF
 Usage: check_ipmi <filename>
        check_ipmi -i 'FAN.*' <filename>
+       check_ipmi -I nc,lnc <filename>
        check_ipmi -S
        check_ipmi -c
 
@@ -61,12 +62,26 @@ Usage: check_ipmi <filename>
        Install sudo rules
     -i
        grep extended regexp which sensors to ignore
+    -I
+       comma separated list of statuses to ignore
 EOF
 }
 
 # trim leading and trailing whitespace
 trim() {
 	echo "$*" | sed -e 's/^ *\| *$//g'
+}
+
+# checks if $status is in comma separated list of $ignore_stats
+ignored_status() {
+	local status="$1"
+	local IFS=","
+	for s in $ignore_status; do
+		if [ "$status" = "$s" ]; then
+			return 0
+		fi
+	done
+	return 1
 }
 
 # checks if ipmitool is even usable on this system
@@ -165,6 +180,10 @@ while [ $# -gt 0 ]; do
 		shift
 		ignore_sensors="$1"
 		;;
+	-I)
+		shift
+		ignore_status="$1"
+		;;
 	-S)
 		setup_sudo=1
 		;;
@@ -222,8 +241,14 @@ while read label result status; do
 		echo "ignore $label"
 		continue
 	fi
+	status=$(trim "$status")
 
-	case $(trim "$status") in
+	if ignored_status "$status"; then
+		echo "ignore status $status on $label"
+		continue
+	fi
+
+	case "$status" in
 	ns)
 		# skip ns = Disabled
 		continue
@@ -233,7 +258,6 @@ while read label result status; do
 		warn_sensors=$((warn_sensors+1))
 		label=$(trim "$label")
 		result=$(trim "$result")
-		status=$(trim "$status")
 		warning="$warning($label, $status, $result) "
 		;;
 	ok)
@@ -244,7 +268,6 @@ while read label result status; do
 		crit_sensors=$((crit_sensors+1))
 		label=$(trim "$label")
 		result=$(trim "$result")
-		status=$(trim "$status")
 		critical="$critical($label, $status, $result) "
 		;;
 	esac
@@ -252,7 +275,7 @@ done < $t
 rm -f $t
 
 msg="${critical:+$crit_sensors sensors critical: $critical}"
-msg="${warning:+$warn_sensors sensors warning: $warning}"
+msg="${msg}${warning:+$warn_sensors sensors warning: $warning}"
 if [ $crit_sensors -gt 0 ]; then
 	die CRITICAL "$msg"
 fi
@@ -260,7 +283,7 @@ if [ $warn_sensors -gt 0 ]; then
 	die WARNING "$msg"
 fi
 
-if [ "$ok_sensors " -le 0 ]; then
+if [ $ok_sensors -le 0 ]; then
 	# 0 sensors found OK is likely error
 	die UNKNOWN "No sensors found OK"
 fi
