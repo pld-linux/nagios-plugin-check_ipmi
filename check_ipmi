@@ -238,7 +238,6 @@ oIFS=$IFS IFS='|'
 while read label result status; do
 	# check for ignored sensors
 	if trim "$label" | grep -qE "^($ignore_sensors)$"; then
-		echo "ignore $label"
 		continue
 	fi
 	status=$(trim "$status")
