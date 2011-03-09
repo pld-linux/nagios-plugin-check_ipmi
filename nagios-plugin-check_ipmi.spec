@@ -1,8 +1,8 @@
 %define		plugin	check_ipmi
 Summary:	Nagios plugin to check IPMI status
 Name:		nagios-plugin-%{plugin}
-Version:	1.13
-Release:	2
+Version:	1.14
+Release:	1
 License:	GPL v2
 Group:		Networking
 Source0:	%{plugin}
