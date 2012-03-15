@@ -2,6 +2,7 @@
 # License: GPL v2
 # Copyright (c) 2007 op5 AB
 # Author: Hugo Hallqvist <dev@op5.com>
+# Copyright (c) 2010-2012
 # Author: Elan Ruusamäe <glen@delfi.ee>
 #
 # Ported to pure shell by Elan Ruusamäe
@@ -20,17 +21,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Description: 
+# Description:
 # Nagios plugin for locally checking hardware status (fans, voltage) via ipmi.
 # It utilizes ipmitool to get results from kernel.
 #
 # Usage: check_ipmi <filename>
-# 
+#
 # filename points to a file which is used as a cache for speeding up the check.
 
 PROGRAM=${0##*/}
-REVISION=$(echo '$Revision$' | sed -e 's/[^0-9.]//g')
 PROGPATH=${0%/*}
+R='$Revision$'; R=${R#* *}; REVISION=${R%% *}
 ARGS="$*"
 . $PROGPATH/utils.sh
 
@@ -38,11 +39,19 @@ ARGS="$*"
 ipmitool=/usr/bin/ipmitool
 sudo=/usr/bin/sudo
 modprobe=/sbin/modprobe
+outfile=
+verbose=false
 
 die() {
 	eval local rc=\$STATE_$1
 	[ "$rc" ] || rc=$STATE_UNKNOWN
 	echo "$2"
+
+	# print also verbose output out
+	if $verbose; then
+		cat $outfile
+		rm -f $outfile
+	fi
 	exit $rc
 }
 
@@ -64,6 +73,8 @@ Usage: check_ipmi <filename>
        grep extended regexp which sensors to ignore
     -I
        comma separated list of statuses to ignore
+    -v
+       enable verbose output (prints each sensor which is not ignored)
 EOF
 }
 
@@ -174,6 +185,9 @@ while [ $# -gt 0 ]; do
 		echo $PROGRAM $REVISION
 		exit 0
 		;;
+	-v)
+		verbose=:
+		;;
 	-c)
 		check_ipmitool=1
 		;;
@@ -230,6 +244,11 @@ LC_ALL=C $sudo $ipmitool -S $cache_filename sdr > $t || die CRITICAL "Can't run 
 # Fan 4            | 29.40 unspecifi   | nc
 # Fans             | 0 unspecified     | nc
 
+# setup outfile, because we should print verbose after status message
+if $verbose; then
+	outfile=$(mktemp) || die CRITICAL "Can't create tempfile"
+fi
+
 ok_sensors=0
 warn_sensors=0
 crit_sensors=0
@@ -270,6 +289,9 @@ while read label result status; do
 		critical="$critical($label, $status, $result) "
 		;;
 	esac
+	if $verbose; then
+		echo "$label $result $status" >> $outfile
+	fi
 done < $t
 rm -f $t
 
