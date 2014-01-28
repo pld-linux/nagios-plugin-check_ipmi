@@ -31,7 +31,7 @@
 
 PROGRAM=${0##*/}
 PROGPATH=${0%/*}
-R='$Revision$'; R=${R#* *}; REVISION=${R%% *}
+VERSION=1.15
 ARGS="$*"
 . $PROGPATH/utils.sh
 
@@ -182,7 +182,7 @@ while [ $# -gt 0 ]; do
 		exit 0
 		;;
 	-V|--version)
-		echo $PROGRAM $REVISION
+		echo $PROGRAM $VERSION
 		exit 0
 		;;
 	-v)

@@ -32,7 +32,7 @@ Nagios plugin to check IPMI status.
 cp -p %{SOURCE0} %{plugin}
 cp -p %{SOURCE2} .
 
-ver=$(awk '/^R=/{print $2}' %{plugin})
+ver=$(awk -F= '/^VERSION=/{print $2}' %{plugin})
 if [ "$ver" != %{version} ]; then
 	exit 1
 fi
