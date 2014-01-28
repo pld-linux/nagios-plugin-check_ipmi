@@ -5,7 +5,7 @@ Version:	1.15
 Release:	1
 License:	GPL v2
 Group:		Networking
-Source0:	%{plugin}
+Source0:	%{plugin}.sh
 Source1:	%{plugin}.cfg
 Source2:	README
 BuildRequires:	rpmbuild(macros) >= 1.552
